@@ -22,7 +22,7 @@
   /* ---------- floors ---------- */
   .floors { position: fixed; inset: 0 var(--panel) 0 0; }
   .floor {
-    position: absolute; inset: 0; overflow: hidden auto; visibility: hidden; isolation: isolate; --slab: #0b0c0f;
+    position: absolute; inset: 0; overflow: hidden auto; overscroll-behavior: contain; visibility: hidden; isolation: isolate; --slab: #0b0c0f;
     /* ceiling and floor slab are painted on the box itself, so they stay put while a floor scrolls */
     background:
       linear-gradient(var(--slab), var(--slab)) top / 100% .6rem no-repeat,
@@ -407,15 +407,28 @@
 
   /* wheel and swipe call the lift once the floor itself has no more to scroll */
   const edge = (d) => { const f = floors[at]; return d > 0 ? f.scrollTop + f.clientHeight >= f.scrollHeight - 2 : f.scrollTop <= 0; };
-  let acc = 0, t;
+  let acc = 0, t, lastScroll = 0;
+  floors.forEach((f) => f.addEventListener('scroll', () => (lastScroll = performance.now()), { passive: true }));
   addEventListener('wheel', (e) => {
-    if (riding || !edge(e.deltaY)) { acc = 0; return; }
+    if (riding || !edge(e.deltaY) || performance.now() - lastScroll < 350) { acc = 0; return; }
     acc += e.deltaY; clearTimeout(t); t = setTimeout(() => (acc = 0), 200);
     if (Math.abs(acc) > 90) { ride(at + Math.sign(acc)); acc = 0; }
   }, { passive: true });
-  let ty = 0;
-  addEventListener('touchstart', (e) => (ty = e.touches[0].clientY), { passive: true });
-  addEventListener('touchend', (e) => { const d = ty - e.changedTouches[0].clientY; if (Math.abs(d) > 70 && edge(d)) ride(at + Math.sign(d)); }, { passive: true });
+  /* a swipe that scrolls the floor's own content never calls the lift: the floor must already be
+     resting at its top or bottom when the finger goes down, and must not move during the swipe */
+  let ty = 0, tx = 0, topAtStart = 0, restedUp = false, restedDown = false;
+  addEventListener('touchstart', (e) => {
+    ty = e.touches[0].clientY; tx = e.touches[0].clientX;
+    topAtStart = floors[at].scrollTop;
+    const settled = performance.now() - lastScroll > 350;
+    restedDown = settled && edge(1); restedUp = settled && edge(-1);
+  }, { passive: true });
+  addEventListener('touchend', (e) => {
+    const d = ty - e.changedTouches[0].clientY, dx = tx - e.changedTouches[0].clientX;
+    if (Math.abs(d) < 70 || Math.abs(dx) > Math.abs(d)) return;
+    if (Math.abs(floors[at].scrollTop - topAtStart) > 2) return;
+    if (d > 0 ? restedDown : restedUp) ride(at + Math.sign(d));
+  }, { passive: true });
 
   /* doors start shut when motion is on, parked open otherwise */
   gsap.set('.door--l', { x: 0, xPercent: calm ? -OPEN : 0 });
