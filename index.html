@@ -29,7 +29,8 @@
       linear-gradient(var(--slab), var(--slab)) bottom / 100% .6rem no-repeat,
       var(--c, var(--wall));
     color: var(--k, var(--ink));
-    padding: clamp(5.5rem, 11vh, 7rem) clamp(1.25rem, 5vw, 5rem) clamp(2.2rem, 6vh, 4rem);
+    --gut: clamp(1.25rem, 5vw, 5rem); --pb: clamp(2.2rem, 6vh, 4rem);
+    padding: clamp(5.5rem, 11vh, 7rem) var(--gut) var(--pb);
     display: grid; align-content: center;
     scrollbar-width: thin; scrollbar-color: currentColor transparent;
   }
@@ -108,11 +109,13 @@
   .cols p span { padding: .4rem .7rem; border: 1.5px solid color-mix(in oklab, var(--k) 55%, var(--c)); border-radius: .3rem; line-height: 1.2; }
 
   /* roof: open sky, a flat sun, the rest of the city below the parapet */
-  .roof { display: grid; justify-items: start; padding-bottom: 27vh; }
+  /* the skyline sits in the roof's own flow (not the fixed-size wall), so tall content on short screens pushes it down instead of covering it */
+  .floor:has(> .roof) { align-content: stretch; }
+  .roof { position: relative; display: grid; justify-items: start; align-content: center; padding-bottom: 27vh; }
   .mail { display: block; font: 800 clamp(1.4rem, 5.1vw, 5.4rem)/1 var(--head); letter-spacing: -.035em; font-variation-settings: 'wdth' 80; overflow-wrap: anywhere; margin: 1.6rem 0 1.9rem; text-decoration-thickness: .06em; }
   .me { position: absolute; right: 5vw; top: 7vh; height: 38vh; width: auto; z-index: 1; -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); }
   .sun { position: absolute; left: 50%; top: 9vh; width: 13vh; aspect-ratio: 1; border-radius: 50%; background: #f3e9d6; }
-  .sky { position: absolute; left: -2%; bottom: .6rem; width: 104%; height: 30vh; color: #120e0b; translate: calc(var(--px, 0) * -12px) 0; transition: translate .9s var(--ease); }
+  .sky { position: absolute; z-index: -1; left: calc(-1 * var(--gut) - 1rem); bottom: calc(.6rem - var(--pb)); width: calc(100% + 2 * var(--gut) + 2rem); height: 30vh; color: #120e0b; translate: calc(var(--px, 0) * -12px) 0; transition: translate .9s var(--ease); }
   .sky .far { fill: color-mix(in oklab, var(--c), #000 38%); }
   .sky .lit { fill: #f6c66f; }
 
@@ -128,11 +131,13 @@
     .jobs { grid-template-columns: minmax(0, 1fr); }
     .jobs li + li { border-left: 0; border-top: 2px solid currentColor; }
     .cols li { grid-template-columns: minmax(0, 1fr); }
-    .roof { padding-bottom: 34vh; }
-    .mail { font-size: 6.4vw; }
+    /* phone roof: portrait tucked top right behind the heading, so copy and skyline share one screen */
+    .roof { align-content: start; padding: 4rem 0 26svh; }
+    .roof h2 { position: relative; z-index: 2; }
+    .mail { font-size: 6.4vw; margin: 1.1rem 0 1.3rem; }
     .sun { display: none; }
-    .me { position: static; height: 9.5rem; width: auto; margin: 0 0 1rem -1rem; }
-    .sky { height: 32vh; }
+    .me { right: calc(-1 * var(--gut) + .25rem); top: -4.4rem; height: 12rem; }
+    .sky { height: 24svh; }
   }
 
   /* ---------- lift panel ---------- */
@@ -256,7 +261,7 @@
   const NEAR = [[0, 90, 80], [110, 130, 112], [270, 70, 150], [360, 160, 72], [560, 110, 130], [700, 60, 172], [780, 170, 92], [980, 90, 142], [1090, 140, 100], [1250, 150, 122]];
   const block = ([x, w, h]) => `<rect x="${x}" y="${260 - h}" width="${w}" height="${h}"/>`;
   const panes = ([x, w, h]) => { let out = ''; for (let r = 0; r < Math.floor((h - 22) / 24); r++) for (let c = 0; c < Math.floor((w - 14) / 20); c++) if ((x + c * 7 + r * 13) % 5 < 2) out += `<rect x="${x + 12 + c * 20}" y="${260 - h + 14 + r * 24}" width="8" height="12"/>`; return out; };
-  const skyline = `<svg class="sky" viewBox="0 0 1400 260" preserveAspectRatio="xMidYMax slice">
+  const skyline = `<svg class="sky" aria-hidden="true" viewBox="0 0 1400 260" preserveAspectRatio="xMidYMax slice">
         <g class="far">${FAR.map(block).join('')}<rect x="558" y="-10" width="4" height="40"/><rect x="893" y="20" width="4" height="30"/></g>
         <g fill="currentColor">${NEAR.map(block).join('')}<path d="M296 110v-22h-8v-16h34v16h-8v22zM1150 160v-18h30v18z"/><g class="lit">${NEAR.map(panes).join('')}</g></g>
       </svg>`;
@@ -300,12 +305,13 @@
         ].map(([k, v]) => `<li><b>${k}</b><p>${v.split(', ').map((x) => `<span>${x}</span>`).join('')}</p></li>`).join('')}</ul>
       </div>` },
     { n: 'R', t: 'Rooftop', d: 'Contact', c: '#3b2f27', k: '#f3e9d6', html: `
-      <div class="wall" aria-hidden="true"><i class="sun"></i>${skyline}</div>
+      <div class="wall" aria-hidden="true"><i class="sun"></i></div>
       <div class="roof">
         <img class="me" src="/harwinder.webp" alt="Harwinder Singh" width="1000" height="736" />
         <h2>Top floor.<br />Let's talk.</h2>
         <a class="mail" href="mailto:${EMAIL}">${EMAIL}</a>
         <div class="row"><a class="btn btn--fill" href="${GITHUB}" target="_blank" rel="noopener">${ICON.github} GitHub</a><a class="btn" href="${RESUME}" download>${ICON.save} Resume PDF</a><button class="btn" data-go="0">${ICON.down} Back to the lobby</button></div>
+        ${skyline}
       </div>` },
   ];
 
@@ -409,9 +415,12 @@
   });
 
   /* wheel and swipe call the lift once the floor itself has no more to scroll */
-  const edge = (d) => { const f = floors[at]; return d > 0 ? f.scrollTop + f.clientHeight >= f.scrollHeight - 2 : f.scrollTop <= 0; };
+  /* iOS rubber-bands past the ends (scrollTop goes negative or beyond the max), so read the position clamped:
+     a bounce at the edge is not the content scrolling */
+  const pos = (f) => Math.min(Math.max(f.scrollTop, 0), Math.max(0, f.scrollHeight - f.clientHeight));
+  const edge = (d) => { const f = floors[at]; return d > 0 ? pos(f) + f.clientHeight >= f.scrollHeight - 2 : pos(f) <= 0; };
   let acc = 0, t, lastScroll = 0;
-  floors.forEach((f) => f.addEventListener('scroll', () => (lastScroll = performance.now()), { passive: true }));
+  floors.forEach((f) => { let was = 0; f.addEventListener('scroll', () => { const p = pos(f); if (Math.abs(p - was) > 1) lastScroll = performance.now(); was = p; }, { passive: true }); });
   addEventListener('wheel', (e) => {
     if (riding || !edge(e.deltaY) || performance.now() - lastScroll < 350) { acc = 0; return; }
     acc += e.deltaY; clearTimeout(t); t = setTimeout(() => (acc = 0), 200);
@@ -422,14 +431,14 @@
   let ty = 0, tx = 0, topAtStart = 0, restedUp = false, restedDown = false;
   addEventListener('touchstart', (e) => {
     ty = e.touches[0].clientY; tx = e.touches[0].clientX;
-    topAtStart = floors[at].scrollTop;
+    topAtStart = pos(floors[at]);
     const settled = performance.now() - lastScroll > 350;
     restedDown = settled && edge(1); restedUp = settled && edge(-1);
   }, { passive: true });
   addEventListener('touchend', (e) => {
     const d = ty - e.changedTouches[0].clientY, dx = tx - e.changedTouches[0].clientX;
     if (Math.abs(d) < 70 || Math.abs(dx) > Math.abs(d)) return;
-    if (Math.abs(floors[at].scrollTop - topAtStart) > 2) return;
+    if (Math.abs(pos(floors[at]) - topAtStart) > 2) return;
     if (d > 0 ? restedDown : restedUp) ride(at + Math.sign(d));
   }, { passive: true });
 
