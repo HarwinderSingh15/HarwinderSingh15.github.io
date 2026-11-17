@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Harwinder Singh · Demo D, The Building</title>
+<style>
+  :root {
+    --wall: #e9e4d8; --ink: #15161a; --steel: #23262d; --steel-2: #2e323b; --amber: #ffb224;
+    --head: 'Bricolage Grotesque Variable', sans-serif; --text: 'Geist Variable', sans-serif;
+    --panel: 5.25rem; --ease: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; }
+  body { background: var(--steel); color: var(--ink); font: 400 1.0625rem/1.5 var(--text); overflow: hidden; }
+  ::selection { background: var(--amber); color: var(--ink); }
+  a { color: inherit; text-underline-offset: .25em; }
+  :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* ---------- floors ---------- */
+  .floors { position: fixed; inset: 0 var(--panel) 0 0; }
+  .floor {
+    position: absolute; inset: 0; overflow: hidden auto; visibility: hidden; isolation: isolate; --slab: #0b0c0f;
+    /* ceiling and floor slab are painted on the box itself, so they stay put while a floor scrolls */
+    background:
+      linear-gradient(var(--slab), var(--slab)) top / 100% .6rem no-repeat,
+      linear-gradient(var(--slab), var(--slab)) bottom / 100% .6rem no-repeat,
+      var(--c, var(--wall));
+    color: var(--k, var(--ink));
+    padding: clamp(5.5rem, 11vh, 7rem) clamp(1.25rem, 5vw, 5rem) clamp(2.2rem, 6vh, 4rem);
+    display: grid; align-content: center;
+    scrollbar-width: thin; scrollbar-color: currentColor transparent;
+  }
+  .floor.on { visibility: visible; }
+
+  /* the wall behind the content: a storey number painted at full height, clipped so it never adds scroll */
+  .wall { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; user-select: none; --n: color-mix(in oklab, var(--c), #000 11%); }
+  .num { position: absolute; right: 1vw; top: 50%; font: 800 min(118vh, 60vw)/.72 var(--head); letter-spacing: -.06em; color: var(--n); translate: calc(var(--px, 0) * -18px) calc(-50% + var(--py, 0) * -12px); transition: translate .9s var(--ease); }
+  .num span { display: block; }
+  .wall:has(+ .app) .num { right: auto; left: 27vw; }   /* app floors: the numeral shows between the copy and the screens */
+
+  /* floor sign, hung from the ceiling slab on two rods */
+  .plate { position: absolute; left: clamp(1.25rem, 5vw, 5rem); top: 1.6rem; height: 2.7rem; display: flex; align-items: center; gap: .8rem; padding-right: .95rem; border: 2px solid currentColor; border-radius: .3rem; background: var(--c); font: 600 .95rem/1 var(--text); letter-spacing: .02em; }
+  .plate::before { content: ''; position: absolute; left: .75rem; right: .75rem; bottom: 100%; height: 1.1rem; border-inline: 2px solid currentColor; }
+  .plate b { display: grid; place-items: center; align-self: stretch; min-width: 2.7rem; background: var(--k); color: var(--c); font: 800 1.4rem/1 var(--head); }
+
+  h1, h2 { font-family: var(--head); font-weight: 800; letter-spacing: -.035em; line-height: .9; font-variation-settings: 'wdth' 85; text-wrap: balance; }
+  h1 { font-size: clamp(3.6rem, 13vw, 13.5rem); line-height: .8; letter-spacing: -.045em; font-variation-settings: 'wdth' 75; }
+  h2 { font-size: clamp(3.4rem, 10vw, 10.5rem); }
+  .lede { font-size: clamp(1.1rem, 1.6vw, 1.4rem); max-width: 38ch; font-weight: 500; }
+  .btn { display: inline-flex; align-items: center; gap: .7rem; min-height: 3rem; padding: 0 1.3rem; border-radius: .4rem; border: 2px solid currentColor; background: none; font-weight: 600; text-decoration: none; transition: background .2s, color .2s, transform .3s var(--ease); }
+  .btn:hover { transform: translateY(-3px); }
+  .btn--fill { background: var(--k, var(--ink)); color: var(--c, var(--wall)); border-color: var(--k, var(--ink)); }
+  .btn svg { width: 1rem; height: 1rem; flex: none; }
+  .row { display: flex; flex-wrap: wrap; gap: .8rem; }
+
+  /* lobby */
+  .lobby { display: grid; grid-template-columns: minmax(0, 7fr) minmax(21rem, 4fr); gap: clamp(2rem, 4vw, 4rem); align-items: end; }
+  .lobby > div:first-child { display: grid; gap: 1.7rem; justify-items: start; }
+  /* directory: a framed letter board screwed to the wall */
+  .dir { position: relative; padding: 1.5rem 1.4rem .9rem; border-radius: .25rem; background: var(--ink); color: var(--wall); box-shadow: 0 0 0 .5rem var(--wall), 0 0 0 calc(.5rem + 2px) var(--ink), 1.1rem 1.3rem 0 .35rem rgb(0 0 0 / .13); }
+  .dir::before { content: ''; position: absolute; inset: .45rem; pointer-events: none; --s: radial-gradient(circle, #8d8a82 0 .16rem, transparent .19rem); background: var(--s) left top, var(--s) right top, var(--s) left bottom, var(--s) right bottom; background-size: .5rem .5rem; background-repeat: no-repeat; }
+  .dir h3 { font: 600 .8rem/1 var(--text); letter-spacing: .16em; text-transform: uppercase; color: var(--amber); padding-bottom: 1rem; border-bottom: 2px solid var(--wall); }
+  .dir button { display: flex; align-items: baseline; gap: .9rem; width: 100%; min-height: 3.15rem; padding: .55rem 0; background: none; border: 0; border-bottom: 1px solid #ffffff26; text-align: left; transition: color .2s, padding .3s var(--ease); }
+  .dir button:last-child { border-bottom: 0; }
+  .dir button:hover, .dir button:focus-visible { color: var(--amber); padding-left: .5rem; }
+  .dir b { font: 800 1.7rem/1 var(--head); width: 1.5rem; flex: none; }
+  .dir span { font: 700 clamp(.95rem, 1.25vw, 1.1rem)/1 var(--head); letter-spacing: .07em; text-transform: uppercase; }
+  .dir em { flex: 1; min-width: max-content; display: flex; align-items: baseline; gap: .6rem; font-style: normal; font-size: .85rem; color: #bdb9ae; white-space: nowrap; }
+  .dir em::before { content: ''; flex: 1; min-width: .6rem; border-bottom: 2px dotted #ffffff47; translate: 0 -.25em; }
+  .dir button:last-child em, .dir button:hover em, .dir button:focus-visible em { color: var(--amber); }
+
+  /* app floors */
+  .app { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(2rem, 4vw, 4rem); align-items: center; }
+  .app > div:first-child { display: grid; gap: 1.5rem; justify-items: start; }
+  .stat { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem 1.2rem; font: 800 clamp(1.7rem, 3.1vw, 2.8rem)/1 var(--head); letter-spacing: -.02em; }
+  .stat em { font: 700 .85rem/1 var(--text); letter-spacing: .12em; text-transform: uppercase; padding: .6rem .75rem; border: 2px solid currentColor; border-radius: .3rem; rotate: -3deg; }
+  /* screens fan out from the middle one; --d is how far each drifts with the cursor */
+  .shots { display: flex; justify-content: center; align-items: center; height: min(72vh, 46rem); }
+  .shot { flex: none; height: 100%; margin: 0; rotate: var(--r, 0deg); translate: calc(var(--px, 0) * var(--d, 12px)) calc(var(--ty, 0rem) + var(--py, 0) * var(--d, 12px)); transition: translate .7s var(--ease); }
+  .shot img { display: block; height: 100%; width: auto; border-radius: clamp(1rem, 2.2vw, 2.1rem); filter: drop-shadow(0 1.6rem 1.3rem rgb(0 0 0 / .3)); }
+  .shots[data-n='1'] .shot { --r: -4deg; --d: 20px; }
+  .shots[data-n='2'] .shot { height: 90%; margin-inline: -1.2rem; }
+  .shots[data-n='2'] .shot:nth-child(1) { --r: -6deg; --ty: 1rem; --d: 8px; }
+  .shots[data-n='2'] .shot:nth-child(2) { --r: 5deg; --ty: -1rem; --d: 22px; z-index: 1; }
+  .shots[data-n='3'] .shot { height: 84%; margin-inline: -2.2rem; --d: 8px; }
+  .shots[data-n='3'] .shot:nth-child(1) { --r: -8deg; --ty: 1.2rem; }
+  .shots[data-n='3'] .shot:nth-child(2) { height: 100%; z-index: 1; --d: 24px; }
+  .shots[data-n='3'] .shot:nth-child(3) { --r: 8deg; --ty: 1.2rem; }
+  .shots .shot.art { --r: 0deg; --d: 20px; height: 100%; }
+  .shot.art img { max-width: 46vw; object-fit: contain; border-radius: 0; filter: none; }
+
+  /* floor 5: tenancies drawn to scale as rooms on a plan, then the stack */
+  .hist { display: grid; gap: clamp(1.5rem, 4vh, 2.6rem); }
+  .jobs { list-style: none; padding: 0; display: grid; grid-template-columns: var(--cols); border: 2px solid currentColor; border-radius: .4rem; overflow: hidden; }
+  .jobs li { display: grid; align-content: start; gap: .3rem; padding: 1.1rem 1.2rem 1.25rem; }
+  .jobs li + li { border-left: 2px solid currentColor; }
+  .jobs li:last-child { background: var(--k); color: var(--c); }
+  .jobs p { font: 800 clamp(1.5rem, 2.6vw, 2.4rem)/1 var(--head); letter-spacing: -.02em; margin-bottom: .7rem; }
+  .jobs b { font: 800 1.2rem/1.15 var(--head); }
+  .jobs span { font-size: .98rem; }
+  .cols { list-style: none; padding: 0; display: grid; }
+  .cols li { display: grid; grid-template-columns: minmax(6rem, 2fr) minmax(0, 10fr); gap: .6rem 1.5rem; align-items: center; padding: .8rem 0; border-top: 1px solid color-mix(in oklab, var(--k) 40%, var(--c)); }
+  .cols b { font: 800 clamp(1.3rem, 2.2vw, 2rem)/1 var(--head); }
+  .cols p { display: flex; flex-wrap: wrap; gap: .5rem; font-weight: 500; }
+  .cols p span { padding: .4rem .7rem; border: 1.5px solid color-mix(in oklab, var(--k) 55%, var(--c)); border-radius: .3rem; line-height: 1.2; }
+
+  /* roof: open sky, a flat sun, the rest of the city below the parapet */
+  .roof { display: grid; justify-items: start; padding-bottom: 27vh; }
+  .mail { display: block; font: 800 clamp(1.4rem, 5.1vw, 5.4rem)/1 var(--head); letter-spacing: -.035em; font-variation-settings: 'wdth' 80; overflow-wrap: anywhere; margin: 1.6rem 0 1.9rem; text-decoration-thickness: .06em; }
+  .sun { position: absolute; right: 9vw; top: 11vh; width: 25vh; aspect-ratio: 1; border-radius: 50%; background: color-mix(in oklab, var(--c), #fff 60%); }
+  .sky { position: absolute; left: -2%; bottom: .6rem; width: 104%; height: 30vh; color: var(--k); translate: calc(var(--px, 0) * -12px) 0; transition: translate .9s var(--ease); }
+  .sky .far { fill: color-mix(in oklab, var(--c), var(--k) 30%); }
+  .sky .lit { fill: var(--c); }
+
+  @media (max-width: 760px) {
+    .floor { align-content: start; padding-top: 5.6rem; }
+    .lobby, .app { grid-template-columns: minmax(0, 1fr); }
+    h1 { font-size: 22.5vw; }
+    h2 { font-size: 17vw; }
+    .num, .wall:has(+ .app) .num { font-size: 105vw; top: 3rem; left: auto; right: -5vw; translate: none; }
+    .dir { margin: .6rem .55rem 1.4rem; }
+    .shots { height: 46vh; margin: .4rem 0 1.5rem; }
+    .shot.art img { max-width: 88vw; }
+    .jobs { grid-template-columns: minmax(0, 1fr); }
+    .jobs li + li { border-left: 0; border-top: 2px solid currentColor; }
+    .cols li { grid-template-columns: minmax(0, 1fr); }
+    .roof { padding-bottom: 34vh; }
+    .mail { font-size: 6.4vw; }
+    .sun { width: 9rem; right: -2rem; top: 2.2rem; }
+    .sky { height: 32vh; }
+  }
+
+  /* ---------- lift panel ---------- */
+  .panel { position: fixed; inset: 0 0 0 auto; width: var(--panel); z-index: 30; background: linear-gradient(90deg, #1a1c21, var(--steel-2) 40%, #1a1c21); border-left: 2px solid #0c0d10; display: flex; flex-direction: column; align-items: center; gap: .7rem; padding: 1rem 0; }
+  /* car position display: both arrows always drawn, the travel direction lights up */
+  .readout { width: 3.9rem; padding: .5rem 0 .55rem; background: #0a0a0c; border: 2px solid #4a4f5a; border-radius: .5rem; color: var(--amber); margin-bottom: auto; display: grid; justify-items: center; gap: .32rem; grid-template-areas: 'l' 'u' 'n' 'd'; }
+  .readout small { grid-area: l; font: 600 .68rem/1 var(--text); letter-spacing: .1em; text-transform: uppercase; color: #b4b8c2; padding-bottom: .1rem; }
+  .readout b { grid-area: n; font: 800 2.1rem/1 var(--head); font-variant-numeric: tabular-nums; }
+  .readout svg { width: 1.1rem; height: .66rem; display: block; fill: #3d414a; transition: fill .15s; }
+  .ar--up { grid-area: u; } .ar--down { grid-area: d; }
+  .up .ar--up, .down .ar--down { fill: var(--amber); }
+  .panel ol { list-style: none; padding: 0; display: flex; flex-direction: column-reverse; gap: .7rem; margin-bottom: auto; }
+  /* keys sit proud of the plate and travel down when pressed; a called floor stays down and lit until the car arrives */
+  .key { width: 3rem; height: 3rem; border-radius: 50%; border: 2px solid #6a707d; background: linear-gradient(180deg, #565c68, #2b2f37); color: #f1ede3; font: 800 1.1rem/1 var(--head); display: grid; place-items: center; box-shadow: 0 3px 0 #0c0d10, 0 7px 8px rgb(0 0 0 / .4); transition: border-color .2s, background-color .2s, color .2s, transform .12s, box-shadow .12s; position: relative; }
+  .key::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--amber); opacity: 0; scale: .82; transition: opacity .2s, scale .3s var(--ease); pointer-events: none; }
+  .key:hover { border-color: #f1ede3; }
+  .key:active, .key.queued { transform: translateY(3px); box-shadow: 0 1px 0 #0c0d10, 0 1px 2px rgb(0 0 0 / .4); }
+  .key.here { border-color: var(--amber); color: var(--amber); background: #0a0a0c; }
+  .key.here::before, .key.queued::before { opacity: 1; scale: 1; }
+  .key.queued { border-color: var(--amber); background: var(--amber); color: #15161a; }
+  @media (prefers-reduced-motion: no-preference) {
+    .key.queued::before { animation: call .5s ease-in-out infinite alternate; }
+    .readout.up .ar--up, .sign.up .ar--up { animation: nudge .45s ease-in-out infinite alternate; }
+    .readout.down .ar--down, .sign.down .ar--down { animation: nudge .45s ease-in-out infinite alternate; --nudge: 3px; }
+  }
+  @keyframes call { to { opacity: .35; scale: 1.1; } }
+  @keyframes nudge { to { translate: 0 var(--nudge, -3px); } }
+  .key span { position: absolute; right: calc(100% + .7rem); top: 50%; translate: 0 -50%; white-space: nowrap; background: #0a0a0c; color: #e9e4d8; font: 500 .9rem/1 var(--text); padding: .5rem .7rem; border-radius: .3rem; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .key:hover span, .key:focus-visible span { opacity: 1; }
+  .hint { font: 500 .7rem/1.25 var(--text); color: #a4a8b3; text-align: center; padding: 0 .4rem; }
+
+  /* ---------- lift doors ---------- */
+  .doors { position: fixed; inset: 0 var(--panel) 0 0; z-index: 20; pointer-events: none; overflow: hidden; }
+  /* brushed steel leaves: a vertical sheen over a top-lit body, a recessed panel, a kick plate, and a shaft window by the seam.
+     They overhang the frame by 10px top and bottom so the arrival settle never shows a gap. */
+  .door { position: absolute; top: -10px; bottom: -10px; width: 50.2%; background:
+      linear-gradient(90deg, rgb(255 255 255 / .09), rgb(255 255 255 / 0) 16%, rgb(0 0 0 / .2) 50%, rgb(255 255 255 / .06) 82%, rgb(0 0 0 / .24)),
+      linear-gradient(180deg, #5d636f, #434852 26%, #30343c 70%, #212429); }
+  .door::before { content: ''; position: absolute; inset: clamp(7.5rem, 17vh, 10rem) 7% clamp(6rem, 13vh, 8.5rem); border: 2px solid; border-color: #17191d #5a606c #5a606c #17191d; border-radius: .3rem; }
+  .door::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: clamp(3.6rem, 8vh, 5rem); background: linear-gradient(180deg, #16181c, #23262d); border-top: 2px solid #5a606c; }
+  .door--l { left: 0; transform: translateX(-125%); border-right: 3px solid #0c0d10; box-shadow: .7rem 0 1.4rem rgb(0 0 0 / .4); }
+  .door--r { right: 0; transform: translateX(125%); border-left: 3px solid #0c0d10; box-shadow: -.7rem 0 1.4rem rgb(0 0 0 / .4); }
+  /* the shaft seen through the door glass: one tile per storey in that storey's colours, driven by the car position */
+  .door--l::before { right: calc(clamp(1rem, 3vw, 2.6rem) * 2 + clamp(2.8rem, 7.5vw, 6.5rem)); }
+  .door--r::before { left: calc(clamp(1rem, 3vw, 2.6rem) * 2 + clamp(2.8rem, 7.5vw, 6.5rem)); }
+  .slot { position: absolute; top: 28%; height: 42%; width: clamp(2.8rem, 7.5vw, 6.5rem); overflow: hidden; border-radius: .5rem; background: #08090b; border: 3px solid #121317; outline: 2px solid #5a606c; }
+  .door--l .slot { right: clamp(1rem, 3vw, 2.6rem); }
+  .door--r .slot { left: clamp(1rem, 3vw, 2.6rem); }
+  .slot::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, rgb(255 255 255 / .18), rgb(255 255 255 / 0) 40%); }
+  .strip { height: calc(var(--n, 7) * 100%); }
+  .cell { height: calc(100% / var(--n, 7)); display: grid; grid-template-rows: 1fr 3fr 1fr; border-top: 2px solid #2a2d34; }
+  .cell i { grid-row: 2; display: grid; place-items: center; background: var(--c); color: var(--k); font: 800 clamp(1.2rem, 3vw, 2.6rem)/1 var(--head); font-style: normal; }
+  /* the indicator hangs over the seam: direction, floor code, floor name, and a bar that fills over the trip */
+  .sign { position: absolute; top: -10px; left: 0; right: 0; margin-inline: auto; width: min(31rem, 94%); display: flex; align-items: center; gap: clamp(.8rem, 2vw, 1.5rem); padding: calc(10px + clamp(.8rem, 1.6vw, 1.1rem)) clamp(1.1rem, 2.6vw, 2rem) clamp(1.2rem, 2vw, 1.5rem); background: #0a0a0c; color: var(--amber); border: 2px solid #5a606c; border-top: 0; border-radius: 0 0 .8rem .8rem; box-shadow: 0 .7rem 1.4rem rgb(0 0 0 / .45); overflow: hidden; }
+  .sign-dir { display: flex; flex-direction: column; gap: .55rem; flex: none; }
+  .sign-dir svg { width: clamp(1.3rem, 2.6vw, 2rem); aspect-ratio: 20 / 12; flex: none; display: block; fill: #3d414a; transition: fill .15s; }
+  .sign b { flex: none; min-width: 1.15ch; text-align: center; font: 800 clamp(3.6rem, 9vw, 6.5rem)/.85 var(--head); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+  .sign-meta { display: grid; gap: .5rem; min-width: 0; padding: .2rem 0 .2rem 1rem; border-left: 2px solid #2e323b; }
+  .sign-meta small { font: 600 .75rem/1 var(--text); letter-spacing: .14em; text-transform: uppercase; color: #b4b8c2; }
+  .sign-meta span { font: 600 clamp(1.05rem, 2vw, 1.5rem)/1.15 var(--text); color: #f1ede3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sign > i { position: absolute; left: 0; right: 0; bottom: 0; height: .35rem; background: var(--amber); transform-origin: 0 50%; transform: scaleX(0); }
+
+  @media (max-width: 760px) {
+    :root { --panel: 0rem; --bar: 4.4rem; }
+    .floors, .doors { inset: 0 0 var(--bar) 0; }
+    .panel { inset: auto 0 0 0; width: auto; height: var(--bar); flex-direction: row; padding: 0 .7rem; border-left: 0; border-top: 2px solid #0c0d10; background: var(--steel-2); gap: .4rem; }
+    .readout { margin: 0; width: auto; padding: .35rem .4rem; grid-template-areas: 'n u' 'n d'; align-items: center; column-gap: .3rem; row-gap: .25rem; }
+    .readout b { font-size: 1.5rem; min-width: 1.1ch; text-align: center; }
+    .readout svg { width: .8rem; height: .5rem; }
+    .panel ol { flex-direction: row; flex: 1; min-width: 0; justify-content: flex-end; margin: 0; gap: .3rem; }
+    .panel li { flex: 0 1 2.6rem; min-width: 0; }
+    .key { width: 100%; height: auto; aspect-ratio: 1; font-size: 1rem; }
+    .key::before { inset: 2px; }
+    .key span, .hint, .readout small { display: none; }
+  }
+</style>
+</head>
+<body>
+  <main class="floors" id="floors"></main>
+
+  <div class="doors" aria-hidden="true">
+    <div class="door door--l"><div class="slot"><div class="strip"></div></div></div><div class="door door--r"><div class="slot"><div class="strip"></div></div></div>
+    <div class="sign"><div class="sign-dir"><svg class="ar--up" viewBox="0 0 20 12"><path d="M10 0l10 12H0z"/></svg><svg class="ar--down" viewBox="0 0 20 12"><path d="M10 12L0 0h20z"/></svg></div><b id="sign-n">G</b><p class="sign-meta"><small>Floor</small><span id="sign-t">Lobby</span></p><i></i></div>
+  </div>
+
+  <nav class="panel" aria-label="Lift">
+    <div class="readout" id="readout"><small>Floor</small><svg class="ar--up" viewBox="0 0 20 12"><path d="M10 0l10 12H0z"/></svg><b id="now">G</b><svg class="ar--down" viewBox="0 0 20 12"><path d="M10 12L0 0h20z"/></svg></div>
+    <ol id="keys"></ol>
+    <p class="hint">Scroll or press a floor</p>
+  </nav>
+
+<script type="module">
+  import '@fontsource-variable/bricolage-grotesque/wdth.css';
+  import '@fontsource-variable/geist';
+  import { gsap } from 'gsap';
+  import { APPS, EMAIL, GITHUB, RESUME } from './data.ts';
+
+  const arrow = '<svg viewBox="0 0 16 16"><path d="M8 14V2M2 8l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  const icon = (d, fill) => `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="${d}" ${fill ? 'fill="currentColor"' : 'fill="none" stroke="currentColor" stroke-width="2"'}/></svg>`;
+  const ICON = {
+    down: icon('M8 2v12M2 8l6 6 6-6'),
+    save: icon('M8 1v9M4 6.5 8 10.5l4-4M2 14h12'),
+    github: icon('M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z', true),
+  };
+  /* 1 to 3 portrait screens fan out; a single wide 'art' image stands alone */
+  const shots = (a) => { const list = a.shots.slice(0, 3); return `<div class="shots" data-n="${list.length}">${list.map((s) => `<figure class="shot ${s.kind}"><img src="${s.src}" alt="${a.name} app screen" /></figure>`).join('')}</div>`; };
+  const wall = (n, tint = '') => `<div class="wall" aria-hidden="true"${tint && ` style="--n:${tint}"`}><b class="num"><span>${n}</span></b></div>`;
+
+  /* floor colours come from data; if a wall and its ink fall short of 4.5:1, nudge the wall away from the ink until they pass */
+  const rgb = (h) => { h = h.slice(1); if (h.length === 3) h = [...h].map((x) => x + x).join(''); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
+  const lum = (c) => c.map((v) => (v /= 255) <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4).reduce((t, v, i) => t + v * [.2126, .7152, .0722][i], 0);
+  const ratio = (a, b) => { const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x); return (hi + .05) / (lo + .05); };
+  const legible = (wallHex, inkHex) => {
+    let c = rgb(wallHex); const k = rgb(inkHex), to = lum(k) > lum(c) ? 0 : 255;
+    for (let i = 0; i < 40 && ratio(c, k) < 4.6; i++) c = c.map((v) => Math.round(v + (to - v) * .04));
+    return '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+  };
+
+  /* rooftop skyline: two flat rows of buildings, [x, width, height] on a 1400 x 260 board */
+  const FAR = [[30, 120, 150], [200, 90, 205], [330, 140, 120], [520, 80, 235], [640, 150, 160], [840, 110, 215], [990, 160, 140], [1190, 90, 195], [1300, 100, 130]];
+  const NEAR = [[0, 90, 80], [110, 130, 112], [270, 70, 150], [360, 160, 72], [560, 110, 130], [700, 60, 172], [780, 170, 92], [980, 90, 142], [1090, 140, 100], [1250, 150, 122]];
+  const block = ([x, w, h]) => `<rect x="${x}" y="${260 - h}" width="${w}" height="${h}"/>`;
+  const panes = ([x, w, h]) => { let out = ''; for (let r = 0; r < Math.floor((h - 22) / 24); r++) for (let c = 0; c < Math.floor((w - 14) / 20); c++) if ((x + c * 7 + r * 13) % 5 < 2) out += `<rect x="${x + 12 + c * 20}" y="${260 - h + 14 + r * 24}" width="8" height="12"/>`; return out; };
+  const skyline = `<svg class="sky" viewBox="0 0 1400 260" preserveAspectRatio="xMidYMax slice">
+        <g class="far">${FAR.map(block).join('')}<rect x="558" y="-10" width="4" height="40"/><rect x="893" y="20" width="4" height="30"/></g>
+        <g fill="currentColor">${NEAR.map(block).join('')}<path d="M296 110v-22h-8v-16h34v16h-8v22zM1150 160v-18h30v18z"/><g class="lit">${NEAR.map(panes).join('')}</g></g>
+      </svg>`;
+  const now = new Date(), tenure = Math.max(12, (now.getFullYear() - 2025) * 12 + now.getMonth() - 2);   /* months at Indiit since March 2025 */
+
+  const FLOORS = [
+    { n: 'G', t: 'Lobby', d: 'You are here', c: '#e9e4d8', k: '#15161a', html: `
+      ${wall('G')}
+      <div class="lobby">
+        <div>
+          <h1>Harwinder<br />Singh</h1>
+          <p class="lede">Full stack mobile developer. I build whole apps on my own: the app, the API, the admin panel and the website. Every floor of this building is one of them.</p>
+          <div class="row"><button class="btn btn--fill" data-go="1">Take the lift up ${arrow}</button><a class="btn" href="mailto:${EMAIL}">Email me</a></div>
+        </div>
+        <div class="dir"><h3>Directory</h3><div id="dir"></div></div>
+      </div>` },
+    ...APPS.map((a, i) => ({ n: String(i + 1), t: a.name, d: a.stat, c: legible(a.color, a.ink), k: a.ink, html: `
+      ${wall(i + 1)}
+      <div class="app">
+        <div>
+          <h2>${a.name}</h2>
+          <p class="lede">${a.line}</p>
+          <p class="stat">${a.stat} <em>${a.role}</em></p>
+          <a class="btn btn--fill" href="${a.url}" target="_blank" rel="noopener">${a.site}</a>
+        </div>
+        ${shots(a)}
+      </div>` })),
+    { n: '5', t: 'Stack and history', d: '2022 to now', c: '#15161a', k: '#e9e4d8', html: `
+      ${wall(5, '#24262c')}
+      <div class="hist">
+        <h2>Four years in.</h2>
+        <ol class="jobs" style="--cols:minmax(13rem, 12fr) minmax(13rem, 25fr) minmax(13rem, ${tenure}fr)">
+          <li><p>2022 to 2023</p><b>Redsky Advance Solutions</b><span>Junior React Native developer</span></li>
+          <li><p>2023 to 2025</p><b>iTechnolabs</b><span>React Native developer</span></li>
+          <li><p>2025 to now</p><b>Indiit Solutions</b><span>Full stack mobile and web developer</span></li>
+        </ol>
+        <ul class="cols">${[
+          ['Mobile', 'React Native, Expo, Reanimated, in-app purchases, WebRTC, FFmpeg'],
+          ['Backend', 'Node.js, Express, MongoDB, Redis, BullMQ, Socket.IO, Stripe Connect'],
+          ['Web', 'React, Next.js, TypeScript, Tailwind CSS, GSAP'],
+        ].map(([k, v]) => `<li><b>${k}</b><p>${v.split(', ').map((x) => `<span>${x}</span>`).join('')}</p></li>`).join('')}</ul>
+      </div>` },
+    { n: 'R', t: 'Rooftop', d: 'Contact', c: '#9fd3ff', k: '#15161a', html: `
+      <div class="wall" aria-hidden="true"><i class="sun"></i>${skyline}</div>
+      <div class="roof">
+        <h2>Top floor.<br />Let's talk.</h2>
+        <a class="mail" href="mailto:${EMAIL}">${EMAIL}</a>
+        <div class="row"><a class="btn btn--fill" href="${GITHUB}" target="_blank" rel="noopener">${ICON.github} GitHub</a><a class="btn" href="${RESUME}" download>${ICON.save} Resume PDF</a><button class="btn" data-go="0">${ICON.down} Back to the lobby</button></div>
+      </div>` },
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  $('floors').innerHTML = FLOORS.map((f, i) =>
+    `<section class="floor" id="floor-${f.n}" style="--c:${f.c};--k:${f.k}" aria-label="Floor ${f.n}, ${f.t}"><p class="plate"><b>${f.n}</b>${f.t}</p>${f.html}</section>`).join('');
+  $('keys').innerHTML = FLOORS.map((f, i) => `<li><button class="key" data-go="${i}" aria-label="Floor ${f.n}, ${f.t}">${f.n}<span>${f.t}</span></button></li>`).join('');
+  $('dir').innerHTML = [...FLOORS].reverse().map((f) => { const i = FLOORS.indexOf(f); return `<button data-go="${i}"><b>${f.n}</b><span>${f.t}</span><em>${f.d}</em></button>`; }).join('');
+
+  const floors = [...document.querySelectorAll('.floor')];
+  const keys = [...document.querySelectorAll('.key')];
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches || location.search.includes('still');
+  /* the shaft strip in the door windows: top storey first, so a rising car sees tiles slide down */
+  const N = FLOORS.length, OPEN = 125;
+  const strips = [...document.querySelectorAll('.strip')];
+  strips.forEach((s) => { s.style.setProperty('--n', N); s.innerHTML = [...FLOORS].reverse().map((f) => `<div class="cell" style="--c:${f.c};--k:${f.k}"><i>${f.n}</i></div>`).join(''); });
+  const shaft = (p) => gsap.set(strips, { yPercent: -(N - 1 - p) / N * 100 });
+  let at = 0, riding = false;
+
+  /* what a floor does as the doors part: copy rises in the direction of travel, screens drop in one by one
+     and settle into their fan, the wall numeral drifts the other way. Fan and cursor drift live on the
+     wrappers in CSS, so these tweens only ever touch the inner elements. */
+  function enter(f, dir = 1, delay = 0) {
+    const q = (s) => f.querySelectorAll(s);
+    const done = 'transform,opacity,visibility';
+    const parts = q('h1, h2, .lede, .stat, .row, .app .btn, .mail, .dir, .dir button, .jobs li, .cols li, .shot img, .num span, .sun, .sky > g');
+    gsap.killTweensOf(parts); gsap.set(parts, { clearProps: done });
+    const base = { autoAlpha: 0, ease: 'expo.out', clearProps: done };
+    gsap.from(q('h1, h2, .lede, .stat, .row, .app .btn, .mail, .dir, .jobs li, .cols li'), { ...base, y: 48 * dir, duration: .9, stagger: .06, delay });
+    gsap.from(q('.dir button'), { ...base, x: -18, duration: .6, stagger: .045, delay: delay + .25 });
+    gsap.from(q('.shot img'), { ...base, y: 170, rotation: (i) => [-9, 6, 12][i], duration: 1.15, stagger: .11, delay: delay + .1 });
+    gsap.from(q('.num span'), { ...base, yPercent: -12 * dir, duration: 1.4, delay });
+    gsap.from(q('.sun'), { ...base, y: 140, duration: 1.5, delay: delay + .1 });
+    gsap.from(q('.sky > g'), { ...base, y: 150, duration: 1.2, stagger: .14, delay });
+  }
+  /* the cursor nudges the layers of the floor you are on: front screens most, the wall numeral against them */
+  if (!calm && matchMedia('(hover: hover) and (pointer: fine)').matches) addEventListener('pointermove', (e) => {
+    const s = floors[at].style;
+    s.setProperty('--px', (e.clientX / innerWidth * 2 - 1).toFixed(3));
+    s.setProperty('--py', (e.clientY / innerHeight * 2 - 1).toFixed(3));
+  }, { passive: true });
+
+  /* show: everything that reports where the car is. swap: put the visitor on a floor. land: both, at rest. */
+  function show(i) {
+    $('now').textContent = $('sign-n').textContent = FLOORS[i].n;
+    $('sign-t').textContent = FLOORS[i].t;
+    keys.forEach((b, k) => b.classList.toggle('here', k === i));
+  }
+  function swap(i) {
+    at = i;
+    floors.forEach((f, k) => f.classList.toggle('on', k === i));
+    keys.forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
+    floors[i].scrollTop = 0;
+    history.replaceState(null, '', `#floor-${FLOORS[i].n}`);
+  }
+  function land(i) { swap(i); show(i); shaft(i); }
+
+  function ride(to) {
+    if (riding || to === at || to < 0 || to >= FLOORS.length) return;
+    if (calm) return land(to);
+    riding = true;
+    const from = at, dir = to > from ? 1 : -1, steps = Math.abs(to - from), way = dir > 0 ? 'up' : 'down';
+    const lamps = [$('readout'), document.querySelector('.sign')];
+    const car = { p: from };
+    let shown = from;
+    const tl = gsap.timeline({ onComplete: () => { riding = false; } });
+
+    show(from); shaft(from);
+    gsap.set('.sign > i', { scaleX: 0 });
+    keys[to].classList.add('queued');
+    lamps.forEach((l) => l.classList.add(way));
+    tl.to('.door--l', { xPercent: 0, duration: .55, ease: 'power3.inOut' }, 0)
+      .to('.door--r', { xPercent: 0, duration: .55, ease: 'power3.inOut' }, 0)
+      .to('.sign', { yPercent: 0, duration: .45, ease: 'power3.out' }, .1)
+      .add(() => swap(to), .6);
+    /* one tween carries the car, so the shaft, the trip bar and the count all accelerate and brake together.
+       Long trips run express: any ride counts for at most ~0.7s */
+    const beat = Math.min(.35, .7 / steps);
+    tl.to(car, { p: to, duration: beat * steps, ease: 'power2.inOut', onUpdate: () => {
+      shaft(car.p);
+      gsap.set('.sign > i', { scaleX: Math.abs(car.p - from) / steps });
+      const k = Math.round(car.p);
+      if (k === shown) return;
+      shown = k; show(k);
+      gsap.fromTo('#sign-n', { yPercent: -40 * dir, opacity: 0 }, { yPercent: 0, opacity: 1, duration: Math.min(.18, beat * .6), ease: 'power2.out', overwrite: true });
+    } }, .65)
+      .add(() => { show(to); shaft(to); keys[to].classList.remove('queued'); lamps.forEach((l) => l.classList.remove(way)); }, '>')
+      .to('.door, .sign', { y: 5, duration: .09, yoyo: true, repeat: 1, ease: 'sine.inOut' }, '>+.08')   /* the car settles */
+      .to('.door--l', { xPercent: -OPEN, duration: .7, ease: 'power3.inOut' }, '>+.05')
+      .to('.door--r', { xPercent: OPEN, duration: .7, ease: 'power3.inOut' }, '<')
+      .add(() => {
+        enter(floors[to], dir);
+      }, '<+.15')
+      .to('.sign', { yPercent: -150, duration: .4, ease: 'power2.in' }, '<+.2');
+  }
+
+  document.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) ride(+b.dataset.go); });
+  addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'PageDown'].includes(e.key)) { e.preventDefault(); ride(at + 1); }
+    if (['ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); ride(at - 1); }
+  });
+
+  /* wheel and swipe call the lift once the floor itself has no more to scroll */
+  const edge = (d) => { const f = floors[at]; return d > 0 ? f.scrollTop + f.clientHeight >= f.scrollHeight - 2 : f.scrollTop <= 0; };
+  let acc = 0, t;
+  addEventListener('wheel', (e) => {
+    if (riding || !edge(e.deltaY)) { acc = 0; return; }
+    acc += e.deltaY; clearTimeout(t); t = setTimeout(() => (acc = 0), 200);
+    if (Math.abs(acc) > 90) { ride(at + Math.sign(acc)); acc = 0; }
+  }, { passive: true });
+  let ty = 0;
+  addEventListener('touchstart', (e) => (ty = e.touches[0].clientY), { passive: true });
+  addEventListener('touchend', (e) => { const d = ty - e.changedTouches[0].clientY; if (Math.abs(d) > 70 && edge(d)) ride(at + Math.sign(d)); }, { passive: true });
+
+  /* doors start shut when motion is on, parked open otherwise */
+  gsap.set('.door--l', { x: 0, xPercent: calm ? -OPEN : 0 });
+  gsap.set('.door--r', { x: 0, xPercent: calm ? OPEN : 0 });
+  gsap.set('.sign', { yPercent: calm ? -150 : 0 });
+
+  const start = FLOORS.findIndex((f) => `#floor-${f.n}` === location.hash);
+  land(start > 0 ? start : 0);
+  if (!calm) Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1200))]).then(() => {
+    gsap.to('.door--l', { xPercent: -OPEN, duration: .9, ease: 'power3.inOut', delay: .2 });
+    gsap.to('.door--r', { xPercent: OPEN, duration: .9, ease: 'power3.inOut', delay: .2 });
+    gsap.to('.sign', { yPercent: -150, duration: .45, ease: 'power2.in', delay: .7 });
+    enter(floors[at], 1, .6);
+  });
+</script>
+</body>
+</html>

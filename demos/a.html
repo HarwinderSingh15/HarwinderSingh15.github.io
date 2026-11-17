@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Harwinder Singh · Demo A, Colour Field</title>
+<style>
+  :root { --bg: #2433ff; --fg: #ffffff; --f: 'Bricolage Grotesque Variable', sans-serif; }
+  * { box-sizing: border-box; margin: 0; }
+  html { scrollbar-color: var(--fg) var(--bg); }
+  body { background: var(--bg); color: var(--fg); font: 500 1.0625rem/1.5 var(--f); transition: background .5s cubic-bezier(.16,1,.3,1), color .3s; padding: 0 clamp(1.25rem, 4vw, 4rem); overflow-x: hidden; }
+  ::selection { background: var(--fg); color: var(--bg); }
+  a { color: inherit; text-underline-offset: .25em; }
+  :focus-visible { outline: 3px solid var(--fg); outline-offset: 4px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.5rem 0; font-weight: 700; }
+  header nav { display: flex; gap: 1.5rem; }
+  h1 { font-size: clamp(3.4rem, 12.5vw, 13rem); font-weight: 800; line-height: .88; letter-spacing: -.035em; margin: 8vh 0 2rem; font-variation-settings: 'wdth' 85; text-wrap: balance; }
+  .role { font-size: clamp(1.1rem, 1.6vw, 1.4rem); max-width: 36ch; margin-bottom: 12vh; }
+  .apps { list-style: none; padding: 0; border-top: 2px solid currentColor; }
+  .apps a { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: .2rem 2rem; padding: 1.4rem 0 1.2rem; border-bottom: 2px solid currentColor; text-decoration: none; }
+  .apps b { font-size: clamp(3rem, 9vw, 9.5rem); font-weight: 800; line-height: .9; letter-spacing: -.03em; font-variation-settings: 'wdth' 80; transition: font-variation-settings .5s cubic-bezier(.16,1,.3,1), letter-spacing .5s; }
+  .apps a:hover b, .apps a:focus-visible b { font-variation-settings: 'wdth' 100; }
+  .apps em { font-style: normal; font-weight: 700; font-size: clamp(1rem, 1.5vw, 1.3rem); text-align: right; }
+  .apps span { grid-column: 1 / -1; max-width: 52ch; }
+  .peek { position: fixed; left: 0; top: 0; width: min(21vw, 300px); pointer-events: none; z-index: 5; opacity: 0; transition: opacity .25s; will-change: transform; }
+  .peek.on { opacity: 1; }
+  .peek img { width: 100%; height: auto; display: block; border-radius: 1.6rem; box-shadow: 0 2rem 3rem -1rem rgb(0 0 0 / .45); }
+  .peek img.art { border-radius: .6rem; box-shadow: none; filter: drop-shadow(0 1.5rem 1.5rem rgb(0 0 0 / .35)); }
+  footer { padding: 14vh 0 3rem; }
+  footer a.mail { display: block; font-size: clamp(1.5rem, 5.4vw, 5.6rem); font-weight: 800; letter-spacing: -.03em; line-height: 1; overflow-wrap: anywhere; font-variation-settings: 'wdth' 80; text-decoration-thickness: .06em; }
+  footer p { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 1.5rem; font-weight: 700; }
+  @media (max-width: 720px) { .peek { display: none; } .apps a { grid-template-columns: 1fr; } .apps em { text-align: left; } }
+  @media (prefers-reduced-motion: reduce) { body, .apps b { transition: none; } }
+</style>
+</head>
+<body>
+  <header><span>Harwinder Singh</span><nav><a id="mail-top">Email</a><a id="cv-top" download>Resume</a></nav></header>
+  <main>
+    <h1>I build whole apps. Alone.</h1>
+    <p class="role">Full stack mobile developer in Mohali, India. React Native, Node.js and TypeScript, four years in.</p>
+    <ul class="apps" id="apps"></ul>
+  </main>
+  <footer>
+    <a class="mail" id="mail"></a>
+    <p><a id="gh" target="_blank" rel="noopener">GitHub</a><a id="cv" download>Resume PDF</a></p>
+  </footer>
+  <div class="peek" id="peek" aria-hidden="true"><img src="/shots/doxie-nearby.webp" alt="" /></div>
+<script type="module">
+  import '@fontsource-variable/bricolage-grotesque/wdth.css';
+  import { gsap } from 'gsap';
+  import { APPS, EMAIL, GITHUB, RESUME } from './data.ts';
+
+  const $ = (id) => document.getElementById(id);
+  $('mail').textContent = EMAIL;
+  ['mail', 'mail-top'].forEach((i) => ($(i).href = `mailto:${EMAIL}`));
+  ['cv', 'cv-top'].forEach((i) => ($(i).href = RESUME));
+  $('gh').href = GITHUB;
+
+  const root = document.documentElement.style;
+  const peek = $('peek'), img = peek.querySelector('img');
+  const base = { bg: '#2433ff', fg: '#ffffff' };
+  const paint = (bg, fg) => { root.setProperty('--bg', bg); root.setProperty('--fg', fg); };
+
+  $('apps').innerHTML = APPS.map((a, i) =>
+    `<li><a href="${a.url}" target="_blank" rel="noopener" data-i="${i}"><b>${a.name}</b><em>${a.stat} · ${a.role}</em><span>${a.line}</span></a></li>`).join('');
+
+  const moveX = gsap.quickTo(peek, 'x', { duration: .5, ease: 'power3' });
+  const moveY = gsap.quickTo(peek, 'y', { duration: .5, ease: 'power3' });
+  addEventListener('pointermove', (e) => { moveX(Math.min(e.clientX + 40, innerWidth - peek.offsetWidth - 24)); moveY(e.clientY - peek.offsetHeight / 2); });
+
+  document.querySelectorAll('.apps a').forEach((el) => {
+    const a = APPS[+el.dataset.i];
+    const on = () => { paint(a.color, a.ink); img.src = a.shots[0].src; img.className = a.shots[0].kind; peek.classList.add('on'); gsap.fromTo(peek, { rotation: -8 }, { rotation: 4, duration: .7, ease: 'expo.out' }); };
+    const off = () => { paint(base.bg, base.fg); peek.classList.remove('on'); };
+    el.addEventListener('pointerenter', on); el.addEventListener('focus', on);
+    el.addEventListener('pointerleave', off); el.addEventListener('blur', off);
+  });
+
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !location.search.includes('still')) {
+    document.fonts.ready.then(() => {
+      gsap.from('h1', { yPercent: 30, autoAlpha: 0, duration: 1, ease: 'expo.out' });
+      gsap.fromTo('h1', { fontVariationSettings: "'wdth' 75" }, { fontVariationSettings: "'wdth' 85", duration: 1.2, ease: 'expo.out' });
+      gsap.from('.role, .apps li', { y: 30, autoAlpha: 0, duration: .7, ease: 'expo.out', stagger: .07, delay: .25 });
+    });
+  }
+</script>
+</body>
+</html>
