@@ -109,7 +109,7 @@
   /* roof: open sky, a flat sun, the rest of the city below the parapet */
   .roof { display: grid; justify-items: start; padding-bottom: 27vh; }
   .mail { display: block; font: 800 clamp(1.4rem, 5.1vw, 5.4rem)/1 var(--head); letter-spacing: -.035em; font-variation-settings: 'wdth' 80; overflow-wrap: anywhere; margin: 1.6rem 0 1.9rem; text-decoration-thickness: .06em; }
-  .me { position: absolute; right: 7vw; top: 8vh; height: 36vh; width: auto; aspect-ratio: 4 / 5; object-fit: cover; border: 4px solid var(--k); border-radius: .6rem; rotate: 3deg; box-shadow: 0 1.6rem 1.8rem -1rem rgb(0 0 0 / .45); z-index: 1; }
+  .me { position: absolute; right: 8vw; top: 6vh; height: 41vh; width: auto; z-index: 1; filter: drop-shadow(0 1.2rem 1rem rgb(0 0 0 / .3)); }
   .sun { position: absolute; right: 9vw; top: 11vh; width: 25vh; aspect-ratio: 1; border-radius: 50%; background: color-mix(in oklab, var(--c), #fff 60%); }
   .sky { position: absolute; left: -2%; bottom: .6rem; width: 104%; height: 30vh; color: var(--k); translate: calc(var(--px, 0) * -12px) 0; transition: translate .9s var(--ease); }
   .sky .far { fill: color-mix(in oklab, var(--c), var(--k) 30%); }
@@ -130,7 +130,7 @@
     .roof { padding-bottom: 34vh; }
     .mail { font-size: 6.4vw; }
     .sun { width: 9rem; right: -2rem; top: 2.2rem; }
-    .me { position: static; height: auto; width: 8rem; rotate: -3deg; margin: 0 0 1.4rem; }
+    .me { position: static; height: 11rem; width: auto; margin: 0 0 1.2rem; }
     .sky { height: 32vh; }
   }
 
@@ -301,7 +301,7 @@
     { n: 'R', t: 'Rooftop', d: 'Contact', c: '#9fd3ff', k: '#15161a', html: `
       <div class="wall" aria-hidden="true"><i class="sun"></i>${skyline}</div>
       <div class="roof">
-        <img class="me" src="/harwinder.webp" alt="Harwinder Singh" width="720" height="900" />
+        <img class="me" src="/harwinder.webp" alt="Harwinder Singh" width="825" height="1100" />
         <h2>Top floor.<br />Let's talk.</h2>
         <a class="mail" href="mailto:${EMAIL}">${EMAIL}</a>
         <div class="row"><a class="btn btn--fill" href="${GITHUB}" target="_blank" rel="noopener">${ICON.github} GitHub</a><a class="btn" href="${RESUME}" download>${ICON.save} Resume PDF</a><button class="btn" data-go="0">${ICON.down} Back to the lobby</button></div>
