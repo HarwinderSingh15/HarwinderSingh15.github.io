@@ -18,7 +18,7 @@ export const APPS: App[] = [
   { name: 'Doxie', line: 'Dog community and services marketplace. App, API, admin panel and website, all built solo.', stat: '120+ screens', role: 'Solo build',
     color: '#ffe24d', ink: '#111', url: 'https://doxiecommunity.com', site: 'doxiecommunity.com',
     shots: [{ src: '/shots/doxie-nearby.webp', kind: 'screen' }, { src: '/shots/doxie-events.webp', kind: 'screen' }, { src: '/shots/doxie-services.webp', kind: 'screen' }, { src: '/shots/doxie-matches.webp', kind: 'screen' }] },
-  { name: 'Flair', line: 'Beauty-booking app. Built stylist background checks and live location tracking.', stat: 'Live tracking', role: 'Team build',
+  { name: 'Flair', line: 'Beauty-booking app. Built stylist background checks and live location tracking.', stat: 'Vetted stylists', role: 'Team build',
     color: '#f1ece2', ink: '#111', url: 'https://flairapp.co', site: 'flairapp.co',
     shots: [{ src: '/shots/flair-home.webp', kind: 'screen' }, { src: '/shots/flair-book-appointment.webp', kind: 'screen' }, { src: '/shots/flair-my-bookings.webp', kind: 'screen' }] },
   { name: 'Fieldsy', line: 'UK marketplace for booking secure dog fields. Mobile app plus backend features.', stat: '80 screens', role: 'Solo build',

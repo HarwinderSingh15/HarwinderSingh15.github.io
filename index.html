@@ -80,14 +80,16 @@
   .dir { position: relative; padding: 1.5rem 1.4rem .9rem; border-radius: .25rem; background: var(--ink); color: var(--wall); box-shadow: 0 0 0 .5rem var(--wall), 0 0 0 calc(.5rem + 2px) var(--ink), 1.1rem 1.3rem 0 .35rem rgb(0 0 0 / .13); }
   .dir::before { content: ''; position: absolute; inset: .45rem; pointer-events: none; --s: radial-gradient(circle, #8d8a82 0 .16rem, transparent .19rem); background: var(--s) left top, var(--s) right top, var(--s) left bottom, var(--s) right bottom; background-size: .5rem .5rem; background-repeat: no-repeat; }
   .dir h3 { font: 600 .8rem/1 var(--text); letter-spacing: .16em; text-transform: uppercase; color: var(--amber); padding-bottom: 1rem; border-bottom: 2px solid var(--wall); }
-  .dir button { display: flex; align-items: baseline; gap: .9rem; width: 100%; min-height: 3.15rem; padding: .55rem 0; background: none; border: 0; border-bottom: 1px solid #ffffff26; text-align: left; transition: color .2s, padding .3s var(--ease); }
-  .dir button:last-child { border-bottom: 0; }
-  .dir button:hover, .dir button:focus-visible { color: var(--amber); padding-left: .5rem; }
+  /* rows read top down in visiting order; the floor you are on is a marker, not a button */
+  .dir-row { display: flex; align-items: baseline; gap: .9rem; width: 100%; min-height: 3.15rem; padding: .55rem 0; background: none; border: 0; border-bottom: 1px solid #ffffff26; text-align: left; transition: color .2s, padding .3s var(--ease); }
+  .dir-row:last-child { border-bottom: 0; }
+  .dir-row.here, button.dir-row:hover, button.dir-row:focus-visible { color: var(--amber); }
+  button.dir-row:hover, button.dir-row:focus-visible { padding-left: .5rem; }
   .dir b { font: 800 1.7rem/1 var(--head); width: 1.5rem; flex: none; }
   .dir span { font: 700 clamp(.95rem, 1.25vw, 1.1rem)/1 var(--head); letter-spacing: .07em; text-transform: uppercase; }
   .dir em { flex: 1; min-width: max-content; display: flex; align-items: baseline; gap: .6rem; font-style: normal; font-size: .85rem; color: #bdb9ae; white-space: nowrap; }
   .dir em::before { content: ''; flex: 1; min-width: .6rem; border-bottom: 2px dotted #ffffff47; translate: 0 -.25em; }
-  .dir button:last-child em, .dir button:hover em, .dir button:focus-visible em { color: var(--amber); }
+  .dir-row.here em, button.dir-row:hover em, button.dir-row:focus-visible em { color: var(--amber); }
 
   /* app floors */
   .app { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(2rem, 4vw, 4rem); align-items: center; }
@@ -347,7 +349,7 @@
   $('floors').innerHTML = FLOORS.map((f, i) =>
     `<section class="floor" id="floor-${f.n}" style="--c:${f.c};--k:${f.k}" aria-label="Floor ${f.n}, ${f.t}"><p class="plate"><b>${f.n}</b>${f.t}</p>${f.html}</section>`).join('');
   $('keys').innerHTML = FLOORS.map((f, i) => `<li><button class="key" data-go="${i}" aria-label="Floor ${f.n}, ${f.t}">${f.n}<span>${f.t}</span></button></li>`).join('');
-  $('dir').innerHTML = [...FLOORS].reverse().map((f) => { const i = FLOORS.indexOf(f); return `<button data-go="${i}"><b>${f.n}</b><span>${f.t}</span><em>${f.d}</em></button>`; }).join('');
+  $('dir').innerHTML = FLOORS.map((f, i) => { const row = `<b>${f.n}</b><span>${f.t}</span><em>${f.d}</em>`; return i ? `<button class="dir-row" data-go="${i}">${row}</button>` : `<p class="dir-row here" aria-current="location">${row}</p>`; }).join('');
 
   const floors = [...document.querySelectorAll('.floor')];
   const keys = [...document.querySelectorAll('.key')];
@@ -365,11 +367,11 @@
   function enter(f, dir = 1, delay = 0) {
     const q = (s) => f.querySelectorAll(s);
     const done = 'transform,opacity,visibility';
-    const parts = q('h1, h2, .lede, .stat, .row, .app .btn, .mail, .me, .dir, .dir button, .jobs li, .cols li, .shot img, .num span, .sun, .sky > g');
+    const parts = q('h1, h2, .lede, .stat, .row, .app .btn, .mail, .me, .dir, .dir-row, .jobs li, .cols li, .shot img, .num span, .sun, .sky > g');
     gsap.killTweensOf(parts); gsap.set(parts, { clearProps: done });
     const base = { autoAlpha: 0, ease: 'expo.out', clearProps: done };
     gsap.from(q('h1, h2, .lede, .stat, .row, .app .btn, .mail, .me, .dir, .jobs li, .cols li'), { ...base, y: 48 * dir, duration: .9, stagger: .06, delay });
-    gsap.from(q('.dir button'), { ...base, x: -18, duration: .6, stagger: .045, delay: delay + .25 });
+    gsap.from(q('.dir-row'), { ...base, x: -18, duration: .6, stagger: .045, delay: delay + .25 });
     gsap.from(q('.shot img'), { ...base, y: 170, rotation: (i) => [-9, 6, 12][i], duration: 1.15, stagger: .11, delay: delay + .1 });
     gsap.from(q('.num span'), { ...base, yPercent: -12 * dir, duration: 1.4, delay });
     gsap.from(q('.sun'), { ...base, y: 140, duration: 1.5, delay: delay + .1 });
