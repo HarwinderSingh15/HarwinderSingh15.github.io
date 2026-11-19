@@ -133,6 +133,7 @@
      The address is sized to the copy column (cqi), not the window. */
   .roof { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: clamp(1.5rem, 4vw, 4rem); align-items: center; align-content: center; padding-bottom: 27vh; }
   .roof-copy { container-type: inline-size; display: grid; justify-items: start; }
+  .legal { margin-top: 1.6rem; font-size: .8rem; letter-spacing: .02em; color: color-mix(in oklab, var(--k), var(--c) 30%); }
   .mail { display: block; font: 800 clamp(1.2rem, 7cqi, 5.4rem)/1 var(--head); letter-spacing: -.035em; font-variation-settings: 'wdth' 80; overflow-wrap: anywhere; margin: 1.6rem 0 1.9rem; text-decoration-thickness: .06em; }
   .me { position: relative; height: min(38vh, 26vw); width: auto; z-index: 1; -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); }
   .sun { position: absolute; left: 50%; top: 9vh; width: 13vh; aspect-ratio: 1; border-radius: 50%; background: #f3e9d6; }
@@ -339,6 +340,7 @@
           <h2>Top floor.<br />Let's talk.</h2>
           <a class="mail" href="mailto:${EMAIL}">${EMAIL}</a>
           <div class="row"><a class="btn btn--fill" href="${GITHUB}" target="_blank" rel="noopener">${ICON.github} GitHub</a><a class="btn" href="${RESUME}" download>${ICON.save} Resume PDF</a><button class="btn" data-go="0">${ICON.down} Back to the lobby</button></div>
+          <p class="legal"><small>&copy; ${now.getFullYear()} Harwinder Singh. All rights reserved.</small></p>
         </div>
         <img class="me" src="/harwinder.webp" alt="Harwinder Singh" width="1000" height="736" />
         ${skyline}
